@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Auth Provider</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="auth-container">
@@ -35,7 +35,7 @@
             const errMsg = document.getElementById('errMsg');
             
             try {
-                const res = await fetch('/api/admin/login', {
+                const res = await fetch('api/admin/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ email, password })
@@ -44,7 +44,7 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    window.location.href = '/dashboard';
+                    window.location.href = 'dashboard';
                 } else {
                     errMsg.textContent = data.message || 'Invalid credentials';
                     errMsg.style.display = 'block';

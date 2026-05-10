@@ -13,12 +13,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve Static Assets
-app.use(express.static(path.join(__dirname, '../public')));
+const ROUTE_PREFIX = process.env.ROUTE_PREFIX || '/auth';
 
-// Load Routes
+// Serve Static Assets under prefix
+app.use(ROUTE_PREFIX, express.static(path.join(__dirname, '../public')));
+
+// Load Routes under prefix
 const routes = require('./routes');
-app.use('/', routes);
+app.use(ROUTE_PREFIX, routes);
+
+// Also catch the naked root and redirect to prefix for convenience
+app.get('/', (req, res) => res.redirect(ROUTE_PREFIX));
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Auth Provider</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         /* Dynamic visibility */
         .view-section { display: none; }
@@ -240,8 +240,8 @@
             grid.innerHTML = '<p style="color:var(--text-muted)">Loading your applications...</p>';
             
             try {
-                const res = await fetch('/api/admin/apps');
-                if (res.status === 401) return window.location.href = '/login';
+                const res = await fetch('api/admin/apps');
+                if (res.status === 401) return window.location.href = 'login';
                 
                 allApps = await res.json();
                 
@@ -274,7 +274,7 @@
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Loading users...</td></tr>';
             
             try {
-                const res = await fetch(`/api/admin/apps/${appId}/users`);
+                const res = await fetch(`api/admin/apps/${appId}/users`);
                 const users = await res.json();
                 
                 if (users.length === 0) {
@@ -313,7 +313,7 @@
             tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text-muted)">Loading histories...</td></tr>';
             
             try {
-                const res = await fetch(`/api/admin/apps/${appId}/logs?email=${encodeURIComponent(userEmail)}`);
+                const res = await fetch(`api/admin/apps/${appId}/logs?email=${encodeURIComponent(userEmail)}`);
                 const logs = await res.json();
                 
                 if (logs.length === 0) {
@@ -349,7 +349,7 @@
                 name: document.getElementById('appNameInput').value,
                 description: document.getElementById('appDescInput').value
             };
-            await fetch('/api/admin/apps', {
+            await fetch('api/admin/apps', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(body)
@@ -364,7 +364,7 @@
             e.preventDefault();
             const email = document.getElementById('userEmailInput').value;
             const username = document.getElementById('userNameInput').value;
-            const res = await fetch('/api/admin/users', {
+            const res = await fetch('api/admin/users', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ app_id: activeApp.app_id, email, username })
@@ -384,7 +384,7 @@
             const currentChecked = document.getElementById('appStatusToggle').checked;
             const newStatus = currentChecked ? 'active' : 'blocked';
             
-            await fetch(`/api/admin/apps/${activeApp.id}/status`, {
+            await fetch(`api/admin/apps/${activeApp.id}/status`, {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ status: newStatus })
@@ -401,14 +401,14 @@
             if (!activeApp) return;
             if (!confirm(`ARE YOU ABSOLUTELY SURE?\nDeleting "${activeApp.name}" will permanently remove all access rules associated with it.`)) return;
             
-            await fetch(`/api/admin/apps/${activeApp.id}`, { method: 'DELETE' });
+            await fetch(`api/admin/apps/${activeApp.id}`, { method: 'DELETE' });
             goHome();
         }
 
         // Toggle User status
         async function toggleUserStatus(userId, isChecked) {
             const newStatus = isChecked ? 'active' : 'blocked';
-            await fetch(`/api/admin/users/${userId}/status`, {
+            await fetch(`api/admin/users/${userId}/status`, {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ status: newStatus })
@@ -420,7 +420,7 @@
         // Delete User
         async function deleteUser(userId) {
             if(!confirm('Permanently remove this email\'s authorization for this application?')) return;
-            await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            await fetch(`api/admin/users/${userId}`, { method: 'DELETE' });
             loadAppUsers(activeApp.app_id);
         }
 
@@ -433,8 +433,8 @@
             alert('Copied to clipboard!');
         }
         async function logout() {
-            await fetch('/api/admin/logout', { method: 'POST' });
-            window.location.href = '/login';
+            await fetch('api/admin/logout', { method: 'POST' });
+            window.location.href = 'login';
         }
 
         // Initializer

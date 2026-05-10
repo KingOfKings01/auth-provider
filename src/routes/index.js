@@ -8,7 +8,7 @@ const protect = require('../middleware/auth');
 // ==========================================
 // Page Routes (Web UI)
 // ==========================================
-router.get('/', (req, res) => res.redirect('/dashboard'));
+router.get('/', (req, res) => res.redirect('dashboard'));
 
 router.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../public/views/login.html'));

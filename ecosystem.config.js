@@ -4,7 +4,8 @@ module.exports = {
     script: "./src/server.js",
     env: {
       NODE_ENV: "production",
-      PORT: 3000
+      PORT: 3005,
+      ROUTE_PREFIX: "/auth"
     },
     instances: 1,
     autorestart: true,

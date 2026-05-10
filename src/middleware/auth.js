@@ -4,11 +4,11 @@ module.exports = (req, res, next) => {
     const token = req.cookies.adminToken;
     
     if (!token) {
-        // If it's an API request, send 401. If it's a page request, redirect to login.
         if (req.path.startsWith('/api/')) {
             return res.status(401).json({ message: 'Unauthorized. No token provided.' });
         }
-        return res.redirect('/login');
+        // Use relative redirect based on route tree
+        return res.redirect('login');
     }
 
     try {
@@ -20,6 +20,6 @@ module.exports = (req, res, next) => {
         if (req.path.startsWith('/api/')) {
             return res.status(401).json({ message: 'Unauthorized. Invalid token.' });
         }
-        return res.redirect('/login');
+        return res.redirect('login');
     }
 };
