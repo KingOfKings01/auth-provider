@@ -22,9 +22,6 @@ app.use(ROUTE_PREFIX, express.static(path.join(__dirname, '../public')));
 const routes = require('./routes');
 app.use(ROUTE_PREFIX, routes);
 
-// Also catch the naked root and redirect to prefix for convenience
-app.get('/', (req, res) => res.redirect(ROUTE_PREFIX));
-
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
