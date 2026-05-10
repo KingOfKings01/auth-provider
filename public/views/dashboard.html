@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Auth Provider</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Dynamic visibility */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="dash-layout">
+        <!-- Top Navbar -->
+        <nav class="top-nav">
+            <div class="brand" onclick="goHome()">🛡️ Auth Provider</div>
+            <button class="nav-item logout-btn" onclick="logout()">Logout</button>
+        </nav>
+
+        <!-- Main View Area -->
+        <main class="main-content">
+            
+            <!-- VIEW 1: APPLICATIONS GRID LIST -->
+            <section id="view-grid" class="view-section active">
+                <header>
+                    <h1 class="page-title">My Applications</h1>
+                    <button class="btn-primary" onclick="openModal('appModal')">+ New Application</button>
+                </header>
+                <div id="appsGrid" class="apps-grid">
+                    <!-- Cards render here -->
+                </div>
+            </section>
+
+            <!-- VIEW 2: SPECIFIC APPLICATION DETAIL -->
+            <section id="view-detail" class="view-section">
+                <div class="breadcrumb" onclick="goHome()">← Back to all applications</div>
+                
+                <header style="margin-bottom: 15px;">
+                    <div>
+                        <h1 class="page-title" id="detailAppName">App Name Loading...</h1>
+                        <p id="detailAppDesc" style="color:var(--text-muted); font-size:14px;"></p>
+                    </div>
+                    <div class="action-group">
+                        <!-- Global app toggle -->
+                        <div style="display:flex; align-items:center;">
+                            <label class="switch">
+                                <input type="checkbox" id="appStatusToggle" onchange="toggleSelectedAppStatus()">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="status-label" id="appStatusLabel">ACTIVE</span>
+                        </div>
+                        <button class="btn-danger-light" id="btnDeleteApp" onclick="handleDeleteApp()">Remove App</button>
+                    </div>
+                </header>
+
+                <!-- Metadata Block -->
+                <div class="detail-info-grid card">
+                    <div class="info-item">
+                        <label>Application ID</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="mono-box" id="metaAppId">---</div>
+                            <button class="btn-secondary" style="padding: 6px 10px; font-size:12px;" onclick="copyTextFromEl('metaAppId')">Copy</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <label>API Key</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="mono-box" id="metaApiKey" data-full-key="">••••••••••••</div>
+                            <button class="btn-secondary" style="padding: 6px 10px; font-size:12px;" id="btnCopyKey">Copy Key</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authorized Emails Section for this specific app -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                    <h2 style="font-size: 18px; font-weight: 600;">Authorized Emails</h2>
+                    <button class="btn-primary" style="font-size: 13px; padding: 7px 14px;" onclick="openModal('userModal')">+ Add User Email</button>
+                </div>
+
+                <div class="card table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>User Email</th>
+                                <th>Added Date</th>
+                                <th>Access Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 3: SPECIFIC USER ACTIVITY HISTORY -->
+            <section id="view-user-history" class="view-section">
+                <div class="breadcrumb" id="historyBreadcrumb" onclick="backToAppDetail()">← Back to App Details</div>
+                
+                <header style="margin-bottom: 25px;">
+                    <div>
+                        <h1 class="page-title" id="historyUserName">User Activity Log</h1>
+                        <p id="historyUserEmail" style="color:var(--text-muted); font-size:15px; font-weight:600;"></p>
+                    </div>
+                </header>
+
+                <div class="card table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Activity Occurred</th>
+                            </tr>
+                        </thead>
+                        <tbody id="singleUserLogsBody">
+                            <!-- Logs render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: CREATE APPLICATION -->
+    <div id="appModal" class="modal-backdrop">
+        <div class="card modal">
+            <h2 class="modal-header">Register Application</h2>
+            <form id="appForm">
+                <div class="form-group">
+                    <label>Application Name</label>
+                    <input type="text" id="appNameInput" required placeholder="Enter name...">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="appDescInput" placeholder="e.g., Desktop Inventory Tool">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('appModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Create App</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD EMAIL USER -->
+    <div id="userModal" class="modal-backdrop">
+        <div class="card modal">
+            <h2 class="modal-header">Authorize New User</h2>
+            <form id="userForm">
+                <div class="form-group">
+                    <label>User Alias / Name</label>
+                    <input type="text" id="userNameInput" placeholder="e.g., John Doe">
+                </div>
+                <div class="form-group">
+                    <label>User Email Address</label>
+                    <input type="email" id="userEmailInput" required placeholder="client@company.com">
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-top:-10px;">Access will be granted specifically to this application only.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Grant Access</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allApps = [];
+        let activeApp = null;
+
+        // --- Navigation & Base Views ---
+        function goHome() {
+            activeApp = null;
+            document.getElementById('view-detail').classList.remove('active');
+            document.getElementById('view-grid').classList.add('active');
+            loadAppsGrid();
+        }
+
+        function openDetail(appId) {
+            activeApp = allApps.find(a => a.app_id === appId);
+            if (!activeApp) return;
+
+            // Populate App Details in UI
+            document.getElementById('detailAppName').innerText = activeApp.name;
+            document.getElementById('detailAppDesc').innerText = activeApp.description || 'No description provided.';
+            document.getElementById('metaAppId').innerText = activeApp.app_id;
+            
+            const keyEl = document.getElementById('metaApiKey');
+            keyEl.innerText = '••••••••' + activeApp.api_key.slice(-6); // Partial display
+            keyEl.setAttribute('data-full-key', activeApp.api_key);
+
+            // Hook copy btn
+            document.getElementById('btnCopyKey').onclick = () => {
+                copyToClipboard(activeApp.api_key);
+            };
+
+            // Set status toggle state
+            const toggle = document.getElementById('appStatusToggle');
+            const label = document.getElementById('appStatusLabel');
+            toggle.checked = activeApp.status === 'active';
+            label.innerText = activeApp.status.toUpperCase();
+            label.className = 'status-label status-' + activeApp.status;
+
+            // View Transition
+            document.getElementById('view-grid').classList.remove('active');
+            document.getElementById('view-detail').classList.add('active');
+            document.getElementById('view-user-history').classList.remove('active');
+
+            loadAppUsers(activeApp.app_id);
+        }
+
+        function backToAppDetail() {
+            document.getElementById('view-user-history').classList.remove('active');
+            document.getElementById('view-detail').classList.add('active');
+        }
+
+        function openUserHistory(userEmail, userName) {
+            document.getElementById('historyUserName').innerText = `Activity for ${userName || 'Unknown User'}`;
+            document.getElementById('historyUserEmail').innerText = userEmail;
+            
+            // Hide App Detail, Show User History
+            document.getElementById('view-detail').classList.remove('active');
+            document.getElementById('view-user-history').classList.add('active');
+
+            loadSingleUserLogs(activeApp.app_id, userEmail);
+        }
+
+        // --- Modals ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- Data Fetching ---
+
+        async function loadAppsGrid() {
+            const grid = document.getElementById('appsGrid');
+            grid.innerHTML = '<p style="color:var(--text-muted)">Loading your applications...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/apps');
+                if (res.status === 401) return window.location.href = '/login';
+                
+                allApps = await res.json();
+                
+                if (allApps.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background:#fff; border-radius:12px; border:1px dashed var(--border);">
+                            <p style="color:var(--text-muted); font-weight:500; margin-bottom:15px;">You haven't added any applications yet.</p>
+                            <button class="btn-primary" onclick="openModal('appModal')">Create Your First App</button>
+                        </div>`;
+                    return;
+                }
+
+                grid.innerHTML = allApps.map(app => `
+                    <div class="card app-card" onclick="openDetail('${app.app_id}')">
+                        <div class="app-card-header">
+                            <div class="app-name">${app.name}</div>
+                            <span class="status-label status-${app.status}" style="margin:0">${app.status.toUpperCase()}</span>
+                        </div>
+                        <div class="app-desc">${app.description || 'No description.'}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); border-top: 1px solid #f1f5f9; padding-top:10px;">
+                            Click to manage emails →
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error(e); grid.innerHTML = '<p style="color:red;">Error loading applications.</p>'; }
+        }
+
+        async function loadAppUsers(appId) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Loading users...</td></tr>';
+            
+            try {
+                const res = await fetch(`/api/admin/apps/${appId}/users`);
+                const users = await res.json();
+                
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">No emails have been authorized for this application yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td style="font-weight:600; font-size:14px; color:var(--primary); cursor:pointer;" onclick="openUserHistory('${user.email}', '${user.username || ''}')">
+                            ${user.username || '—'}
+                        </td>
+                        <td style="color:var(--text-main)">${user.email}</td>
+                        <td style="color:var(--text-muted); font-size:13px;">${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <div style="display:flex; align-items:center;">
+                                <label class="switch">
+                                    <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
+                                           onchange="toggleUserStatus(${user.id}, this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="status-label status-${user.status}">${user.status.toUpperCase()}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn-secondary" style="padding:5px 10px; font-size:12px;" onclick="openUserHistory('${user.email}', '${user.username || ''}')">History</button>
+                            <button class="btn-danger-light" style="margin-left:10px;" onclick="deleteUser(${user.id})">Remove</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="5">Error fetching users.</td></tr>'; }
+        }
+
+        async function loadSingleUserLogs(appId, userEmail) {
+            const tbody = document.getElementById('singleUserLogsBody');
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text-muted)">Loading histories...</td></tr>';
+            
+            try {
+                const res = await fetch(`/api/admin/apps/${appId}/logs?email=${encodeURIComponent(userEmail)}`);
+                const logs = await res.json();
+                
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:30px;color:var(--text-muted); font-size:14px;">This user has no recorded activity logs.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => {
+                    const stamp = new Date(log.timestamp);
+                    const formatTime = stamp.toLocaleDateString() + ' ' + stamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    return `
+                    <tr>
+                        <td style="font-weight:600; color:var(--text-main); width:250px;">${formatTime}</td>
+                        <td>
+                            <div style="display:inline-flex; align-items:center; gap:8px;">
+                                <div style="width:8px; height:8px; border-radius:50%; background:${log.action === 'LOGIN' ? 'var(--success)' : 'var(--text-muted)'}"></div>
+                                <span style="font-weight:700; letter-spacing:0.5px; color:${log.action === 'LOGIN' ? 'var(--primary)' : 'var(--text-muted)'}">${log.action}</span>
+                                <span style="color:var(--text-muted); font-size:13px;">– Recorded at node session</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        // --- Actions ---
+
+        // Add Application
+        document.getElementById('appForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                name: document.getElementById('appNameInput').value,
+                description: document.getElementById('appDescInput').value
+            };
+            await fetch('/api/admin/apps', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            closeModal('appModal');
+            e.target.reset();
+            loadAppsGrid();
+        });
+
+        // Add User
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('userEmailInput').value;
+            const username = document.getElementById('userNameInput').value;
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ app_id: activeApp.app_id, email, username })
+            });
+            if(!res.ok) {
+                const err = await res.json();
+                return alert(err.error || 'Failed to add user');
+            }
+            closeModal('userModal');
+            e.target.reset();
+            loadAppUsers(activeApp.app_id);
+        });
+
+        // Toggle Entire App
+        async function toggleSelectedAppStatus() {
+            if (!activeApp) return;
+            const currentChecked = document.getElementById('appStatusToggle').checked;
+            const newStatus = currentChecked ? 'active' : 'blocked';
+            
+            await fetch(`/api/admin/apps/${activeApp.id}/status`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: newStatus })
+            });
+            
+            activeApp.status = newStatus;
+            const label = document.getElementById('appStatusLabel');
+            label.innerText = newStatus.toUpperCase();
+            label.className = 'status-label status-' + newStatus;
+        }
+
+        // Delete Entire App
+        async function handleDeleteApp() {
+            if (!activeApp) return;
+            if (!confirm(`ARE YOU ABSOLUTELY SURE?\nDeleting "${activeApp.name}" will permanently remove all access rules associated with it.`)) return;
+            
+            await fetch(`/api/admin/apps/${activeApp.id}`, { method: 'DELETE' });
+            goHome();
+        }
+
+        // Toggle User status
+        async function toggleUserStatus(userId, isChecked) {
+            const newStatus = isChecked ? 'active' : 'blocked';
+            await fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: newStatus })
+            });
+            // Reload list to reflect clean label colors without complicated dynamic UI logic binding
+            loadAppUsers(activeApp.app_id);
+        }
+
+        // Delete User
+        async function deleteUser(userId) {
+            if(!confirm('Permanently remove this email\'s authorization for this application?')) return;
+            await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            loadAppUsers(activeApp.app_id);
+        }
+
+        // --- Helpers ---
+        function copyTextFromEl(elId) {
+            copyToClipboard(document.getElementById(elId).innerText);
+        }
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        }
+        async function logout() {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        // Initializer
+        document.addEventListener('DOMContentLoaded', loadAppsGrid);
+
+    </script>
+</body>
+</html>

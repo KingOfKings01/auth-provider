@@ -1,0 +1,169 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Admin = require('../models/Admin');
+const Application = require('../models/Application');
+const AuthorizedUser = require('../models/AuthorizedUser');
+const ActivityLog = require('../models/ActivityLog');
+
+const adminController = {
+    // -- Auth --
+    login: async (req, res) => {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Email and password required' });
+        }
+
+        try {
+            const admin = Admin.findByEmail(email);
+            if (!admin) {
+                return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            }
+
+            const isMatch = await bcrypt.compare(password, admin.password);
+            if (!isMatch) {
+                return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            }
+
+            // Create JWT
+            const token = jwt.sign(
+                { id: admin.id, email: admin.email },
+                process.env.JWT_SECRET || 'super_secret_key_change_this',
+                { expiresIn: process.env.JWT_EXPIRE || '24h' }
+            );
+
+            res.cookie('adminToken', token, {
+                httpOnly: true,
+                maxAge: 24 * 60 * 60 * 1000 // 24 hours
+            });
+
+            res.json({ success: true, message: 'Logged in successfully' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    },
+
+    logout: (req, res) => {
+        res.clearCookie('adminToken');
+        res.json({ success: true, message: 'Logged out' });
+    },
+
+    // -- Applications --
+    getApps: (req, res) => {
+        try {
+            const apps = Application.findAll();
+            res.json(apps);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    createApp: (req, res) => {
+        const { name, description } = req.body;
+        if (!name) return res.status(400).json({ error: 'Name is required' });
+        
+        try {
+            const app = Application.create(name, description);
+            res.status(201).json(app);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    updateAppStatus: (req, res) => {
+        const { id } = req.params;
+        const { status } = req.body;
+        try {
+            Application.updateStatus(id, status);
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    deleteApp: (req, res) => {
+        const { id } = req.params;
+        try {
+            Application.delete(id);
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    // -- Authorized Users --
+    getUsers: (req, res) => {
+        try {
+            const users = AuthorizedUser.findAll();
+            res.json(users);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    getUsersByApp: (req, res) => {
+        const { appId } = req.params;
+        try {
+            const users = AuthorizedUser.findByAppId(appId);
+            res.json(users);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    addUser: (req, res) => {
+        const { app_id, email, username } = req.body;
+        if (!app_id || !email) return res.status(400).json({ error: 'App ID and Email are required' });
+
+        try {
+            AuthorizedUser.create(app_id, email, username);
+            res.status(201).json({ success: true });
+        } catch (e) {
+            if (e.message.includes('UNIQUE constraint')) {
+                res.status(400).json({ error: 'Email already added for this application' });
+            } else {
+                res.status(500).json({ error: e.message });
+            }
+        }
+    },
+
+    updateUserStatus: (req, res) => {
+        const { id } = req.params;
+        const { status } = req.body;
+        try {
+            AuthorizedUser.updateStatus(id, status);
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    deleteUser: (req, res) => {
+        const { id } = req.params;
+        try {
+            AuthorizedUser.delete(id);
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    },
+
+    getAppLogs: (req, res) => {
+        const { appId } = req.params;
+        const { email } = req.query;
+        
+        try {
+            let logs;
+            if (email) {
+                logs = ActivityLog.findByUser(appId, email);
+            } else {
+                logs = ActivityLog.findByApp(appId);
+            }
+            res.json(logs);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    }
+};
+
+module.exports = adminController;
