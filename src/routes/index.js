@@ -10,6 +10,9 @@ const protect = require('../middleware/auth');
 // ==========================================
 router.get('/', (req, res) => res.redirect('dashboard'));
 
+// Public Diagnostic Route
+router.get('/ping', (req, res) => res.json({ status: "online", message: "Auth Provider Service is Live" }));
+
 router.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../public/views/login.html'));
 });
