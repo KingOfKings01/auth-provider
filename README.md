@@ -10,9 +10,9 @@ A lightweight authentication and authorization token provisioning system, built 
 
 ## 🛠️ Installation & Local Run
 
-1. Install Dependencies
+1. Install Dependencies using PNPM (Optimized storage)
 ```bash
-npm install
+pnpm install
 ```
 
 2. Setup `.env` file:
@@ -27,7 +27,7 @@ DATABASE_PATH=./data/database.sqlite
 
 3. Start in Dev Mode:
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ## 🚀 Deployment (AWS with PM2)
