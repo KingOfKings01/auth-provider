@@ -1,37 +1,68 @@
-const db = require('../config/database');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
+const ApplicationSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String },
+    app_id: { type: String, required: true, unique: true },
+    api_key: { type: String, required: true },
+    status: { type: String, default: 'active' }
+}, { 
+    collection: 'auth_provider_applications',
+    timestamps: { createdAt: 'created_at', updatedAt: false },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+ApplicationSchema.virtual('id').get(function() {
+    return this._id.toHexString();
+});
+
+const MongooseApplication = mongoose.model('AuthProviderApplication', ApplicationSchema);
+
 const Application = {
-    create: (name, description) => {
+    create: async (name, description) => {
         const appId = uuidv4();
         const apiKey = require('crypto').randomBytes(24).toString('hex');
-        const stmt = db.prepare(`
-            INSERT INTO applications (name, description, app_id, api_key) 
-            VALUES (?, ?, ?, ?)
-        `);
-        const info = stmt.run(name, description, appId, apiKey);
-        return { id: info.lastInsertRowid, appId, apiKey };
+        
+        const doc = await MongooseApplication.create({
+            name,
+            description,
+            app_id: appId,
+            api_key: apiKey
+        });
+        
+        // Exactly match previous SQL response interface: { id, appId, apiKey }
+        return { id: doc._id.toString(), appId, apiKey };
     },
 
-    findAll: () => {
-        return db.prepare("SELECT * FROM applications ORDER BY created_at DESC").all();
+    findAll: async () => {
+        const docs = await MongooseApplication.find().sort({ created_at: -1 });
+        return docs.map(doc => doc.toObject({ virtuals: true }));
     },
 
-    findById: (id) => {
-        return db.prepare("SELECT * FROM applications WHERE id = ?").get(id);
+    findById: async (id) => {
+        if (!mongoose.Types.ObjectId.isValid(id)) return null;
+        const doc = await MongooseApplication.findById(id);
+        return doc ? doc.toObject({ virtuals: true }) : null;
     },
 
-    findByAppId: (appId) => {
-        return db.prepare("SELECT * FROM applications WHERE app_id = ?").get(appId);
+    findByAppId: async (appId) => {
+        const doc = await MongooseApplication.findOne({ app_id: appId });
+        return doc ? doc.toObject({ virtuals: true }) : null;
     },
 
-    updateStatus: (id, status) => {
-        return db.prepare("UPDATE applications SET status = ? WHERE id = ?").run(status, id);
+    updateStatus: async (id, status) => {
+        if (!mongoose.Types.ObjectId.isValid(id)) return null;
+        return await MongooseApplication.findByIdAndUpdate(id, { status });
     },
 
-    delete: (id) => {
-        return db.prepare("DELETE FROM applications WHERE id = ?").run(id);
-    }
+    delete: async (id) => {
+        if (!mongoose.Types.ObjectId.isValid(id)) return null;
+        return await MongooseApplication.findByIdAndDelete(id);
+    },
+    
+    MongooseModel: MongooseApplication
 };
 
 module.exports = Application;

@@ -4,7 +4,7 @@ const ActivityLog = require('../models/ActivityLog');
 const jwt = require('jsonwebtoken');
 
 const apiController = {
-    authorize: (req, res) => {
+    authorize: async (req, res) => {
         const { app_id, api_key, email } = req.body;
 
         if (!app_id || !api_key || !email) {
@@ -16,7 +16,7 @@ const apiController = {
 
         try {
             // 1. Validate Application
-            const app = Application.findByAppId(app_id);
+            const app = await Application.findByAppId(app_id);
             if (!app) {
                 return res.status(404).json({ authorized: false, message: 'Application not found' });
             }
@@ -32,7 +32,7 @@ const apiController = {
             }
 
             // 2. Validate User email for this app
-            const user = AuthorizedUser.findByAppAndEmail(app_id, email);
+            const user = await AuthorizedUser.findByAppAndEmail(app_id, email);
             if (!user) {
                 return res.status(403).json({ authorized: false, message: 'Email is not registered for this application' });
             }
@@ -56,7 +56,7 @@ const apiController = {
             );
 
             // LOG ACTIVITY: LOGIN SUCCESS
-            ActivityLog.log(app_id, email, 'LOGIN');
+            await ActivityLog.log(app_id, email, 'LOGIN');
 
             return res.json({
                 authorized: true,
@@ -71,7 +71,7 @@ const apiController = {
         }
     },
 
-    logout: (req, res) => {
+    logout: async (req, res) => {
         const { app_id, api_key, email } = req.body;
         
         if (!app_id || !email) {
@@ -80,9 +80,9 @@ const apiController = {
 
         try {
             // Verify basic app logic first
-            const app = Application.findByAppId(app_id);
+            const app = await Application.findByAppId(app_id);
             if (app && app.api_key === api_key) {
-                ActivityLog.log(app_id, email, 'LOGOUT');
+                await ActivityLog.log(app_id, email, 'LOGOUT');
                 return res.json({ success: true, message: 'Logged out tracked' });
             }
             return res.status(401).json({ success: false });

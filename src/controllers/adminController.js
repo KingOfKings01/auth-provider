@@ -15,7 +15,7 @@ const adminController = {
         }
 
         try {
-            const admin = Admin.findByEmail(email);
+            const admin = await Admin.findByEmail(email);
             if (!admin) {
                 return res.status(401).json({ success: false, message: 'Invalid credentials' });
             }
@@ -52,42 +52,42 @@ const adminController = {
     },
 
     // -- Applications --
-    getApps: (req, res) => {
+    getApps: async (req, res) => {
         try {
-            const apps = Application.findAll();
+            const apps = await Application.findAll();
             res.json(apps);
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    createApp: (req, res) => {
+    createApp: async (req, res) => {
         const { name, description } = req.body;
         if (!name) return res.status(400).json({ error: 'Name is required' });
         
         try {
-            const app = Application.create(name, description);
+            const app = await Application.create(name, description);
             res.status(201).json(app);
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    updateAppStatus: (req, res) => {
+    updateAppStatus: async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         try {
-            Application.updateStatus(id, status);
+            await Application.updateStatus(id, status);
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    deleteApp: (req, res) => {
+    deleteApp: async (req, res) => {
         const { id } = req.params;
         try {
-            Application.delete(id);
+            await Application.delete(id);
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: e.message });
@@ -95,34 +95,35 @@ const adminController = {
     },
 
     // -- Authorized Users --
-    getUsers: (req, res) => {
+    getUsers: async (req, res) => {
         try {
-            const users = AuthorizedUser.findAll();
+            const users = await AuthorizedUser.findAll();
             res.json(users);
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    getUsersByApp: (req, res) => {
+    getUsersByApp: async (req, res) => {
         const { appId } = req.params;
         try {
-            const users = AuthorizedUser.findByAppId(appId);
+            const users = await AuthorizedUser.findByAppId(appId);
             res.json(users);
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    addUser: (req, res) => {
+    addUser: async (req, res) => {
         const { app_id, email, username } = req.body;
         if (!app_id || !email) return res.status(400).json({ error: 'App ID and Email are required' });
 
         try {
-            AuthorizedUser.create(app_id, email, username);
+            await AuthorizedUser.create(app_id, email, username);
             res.status(201).json({ success: true });
         } catch (e) {
-            if (e.message.includes('UNIQUE constraint')) {
+            // Adjust error checking to handle Mongo/Mongoose unique constraints
+            if (e.code === 11000 || e.message.includes('duplicate') || e.message.includes('UNIQUE constraint')) {
                 res.status(400).json({ error: 'Email already added for this application' });
             } else {
                 res.status(500).json({ error: e.message });
@@ -130,37 +131,37 @@ const adminController = {
         }
     },
 
-    updateUserStatus: (req, res) => {
+    updateUserStatus: async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         try {
-            AuthorizedUser.updateStatus(id, status);
+            await AuthorizedUser.updateStatus(id, status);
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    deleteUser: (req, res) => {
+    deleteUser: async (req, res) => {
         const { id } = req.params;
         try {
-            AuthorizedUser.delete(id);
+            await AuthorizedUser.delete(id);
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     },
 
-    getAppLogs: (req, res) => {
+    getAppLogs: async (req, res) => {
         const { appId } = req.params;
         const { email } = req.query;
         
         try {
             let logs;
             if (email) {
-                logs = ActivityLog.findByUser(appId, email);
+                logs = await ActivityLog.findByUser(appId, email);
             } else {
-                logs = ActivityLog.findByApp(appId);
+                logs = await ActivityLog.findByApp(appId);
             }
             res.json(logs);
         } catch (e) {
