@@ -2,6 +2,8 @@ const Application = require('../models/Application');
 const AuthorizedUser = require('../models/AuthorizedUser');
 const ActivityLog = require('../models/ActivityLog');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { sendOTPEmail } = require('../config/mailer');
 
 const apiController = {
     authorize: async (req, res) => {
@@ -41,27 +43,27 @@ const apiController = {
                 return res.status(403).json({ authorized: false, message: 'Access denied. Your email is blocked.' });
             }
 
-            // 3. Create validation token
-            const clientToken = jwt.sign(
-                { 
-                    app_id: app_id, 
-                    email: email, 
-                    granted_at: new Date().toISOString() 
-                },
-                process.env.JWT_SECRET || 'auth_provider_default_secure_fallback',
-                { 
-                    expiresIn: process.env.JWT_EXPIRE || '24h',
-                    issuer: 'auth-provider'
-                }
-            );
+            // 3. Generate validation OTP
+            const otp = Math.floor(100000 + crypto.randomInt(900000)).toString();
 
-            // LOG ACTIVITY: LOGIN SUCCESS
-            await ActivityLog.log(app_id, email, 'LOGIN');
+            // 4. Dispatch the Email OTP
+            try {
+                await sendOTPEmail(email, otp, app.name);
+            } catch (mailErr) {
+                console.error('❌ Failed to dispatch OTP email:', mailErr);
+                return res.status(500).json({
+                    authorized: false,
+                    message: 'Authentication initialization failed: Unable to dispatch verification email.'
+                });
+            }
+
+            // LOG ACTIVITY: LOGIN INITIATED
+            await ActivityLog.log(app_id, email, 'LOGIN_INIT');
 
             return res.json({
                 authorized: true,
-                message: 'Authorized successfully',
-                token: clientToken,
+                message: 'Verification code sent. Please check your email inbox.',
+                otp: otp,
                 app_name: app.name
             });
 
