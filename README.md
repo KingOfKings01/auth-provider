@@ -3,6 +3,7 @@
 A lightweight authentication and authorization token provisioning system, built to regulate access control for custom desktop applications.
 
 ## ✨ Features
+
 - **Application Provisioning**: Register new desktop apps to generate Unique `App IDs` and `API Keys`.
 - **Alias Identification**: Attach descriptive Usernames/Names to authorized emails for clear tracking.
 - **Nested Activity Audits**: Track `LOGIN` and `LOGOUT` sequences with precise timestamps on a per-user level.
@@ -11,11 +12,13 @@ A lightweight authentication and authorization token provisioning system, built 
 ## 🛠️ Installation & Local Run
 
 1. Install Dependencies using PNPM (Optimized storage)
+
 ```bash
 pnpm install
 ```
 
 2. Setup `.env` file:
+
 ```env
 PORT=3000
 JWT_SECRET=your_secret_here
@@ -26,6 +29,7 @@ DATABASE_PATH=./data/database.sqlite
 ```
 
 3. Start in Dev Mode:
+
 ```bash
 pnpm run dev
 ```
@@ -35,7 +39,13 @@ pnpm run dev
 1. Clone repo to your EC2 instance.
 2. Ensure Node & PM2 are installed globally: `npm i -g pm2`.
 3. Run the app process using ecosystem config:
+
 ```bash
 pm2 start ecosystem.config.js
 pm2 save
 ```
+
+
+* **Main Entry / Dashboard:** [http://localhost:3005/auth/dashboard](http://localhost:3005/auth/dashboard) *(This is protected and will redirect you to the login page if you aren't signed in).*
+* **Login Page:** [http://localhost:3005/auth/login](http://localhost:3005/auth/login)
+* **Root Redirect URL:** [http://localhost:3005/auth](http://localhost:3005/auth) *(Automatically redirects to the dashboard).*

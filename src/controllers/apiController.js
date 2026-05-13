@@ -48,8 +48,11 @@ const apiController = {
                     email: email, 
                     granted_at: new Date().toISOString() 
                 },
-                process.env.JWT_SECRET || 'super_secret_key_change_this',
-                { expiresIn: '24h' } // Example expiry
+                process.env.JWT_SECRET || 'auth_provider_default_secure_fallback',
+                { 
+                    expiresIn: process.env.JWT_EXPIRE || '24h',
+                    issuer: 'auth-provider'
+                }
             );
 
             // LOG ACTIVITY: LOGIN SUCCESS

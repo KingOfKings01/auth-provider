@@ -28,11 +28,14 @@ const adminController = {
             // Create JWT
             const token = jwt.sign(
                 { id: admin.id, email: admin.email },
-                process.env.JWT_SECRET || 'super_secret_key_change_this',
-                { expiresIn: process.env.JWT_EXPIRE || '24h' }
+                process.env.JWT_SECRET || 'auth_provider_default_secure_fallback',
+                { 
+                    expiresIn: process.env.JWT_EXPIRE || '24h',
+                    issuer: 'auth-provider' 
+                }
             );
 
-            res.cookie('adminToken', token, {
+            res.cookie('auth_provider_admin_token', token, {
                 httpOnly: true,
                 maxAge: 24 * 60 * 60 * 1000 // 24 hours
             });
@@ -44,7 +47,7 @@ const adminController = {
     },
 
     logout: (req, res) => {
-        res.clearCookie('adminToken');
+        res.clearCookie('auth_provider_admin_token');
         res.json({ success: true, message: 'Logged out' });
     },
 

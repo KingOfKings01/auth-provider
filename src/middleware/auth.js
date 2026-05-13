@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-    const token = req.cookies.adminToken;
+    const token = req.cookies.auth_provider_admin_token;
     
     if (!token) {
         if (req.path.startsWith('/api/')) {
@@ -12,11 +12,13 @@ module.exports = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_key_change_this');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'auth_provider_default_secure_fallback', {
+            issuer: 'auth-provider'
+        });
         req.admin = decoded;
         next();
     } catch (error) {
-        res.clearCookie('adminToken');
+        res.clearCookie('auth_provider_admin_token');
         if (req.path.startsWith('/api/')) {
             return res.status(401).json({ message: 'Unauthorized. Invalid token.' });
         }
