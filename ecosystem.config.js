@@ -2,6 +2,7 @@ module.exports = {
   apps : [{
     name: "auth-provider",
     script: "./src/server.js",
+    exec_mode: "fork",
     env: {
       NODE_ENV: "production",
       PORT: 3005,
