@@ -293,7 +293,7 @@
                             <div style="display:flex; align-items:center;">
                                 <label class="switch">
                                     <input type="checkbox" ${user.status === 'active' ? 'checked' : ''} 
-                                           onchange="toggleUserStatus(${user.id}, this.checked)">
+                                           onchange="toggleUserStatus('${user.id}', this.checked)">
                                     <span class="slider"></span>
                                 </label>
                                 <span class="status-label status-${user.status}">${user.status.toUpperCase()}</span>
@@ -301,7 +301,7 @@
                         </td>
                         <td>
                             <button class="btn-secondary" style="padding:5px 10px; font-size:12px;" onclick="openUserHistory('${user.email}', '${user.username || ''}')">History</button>
-                            <button class="btn-danger-light" style="margin-left:10px;" onclick="deleteUser(${user.id})">Remove</button>
+                            <button class="btn-danger-light" style="margin-left:10px;" onclick="deleteUser('${user.id}')">Remove</button>
                         </td>
                     </tr>
                 `).join('');

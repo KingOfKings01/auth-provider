@@ -1,5 +1,5 @@
 module.exports = {
-  apps : [{
+  apps: [{
     name: "auth-provider",
     script: "./src/server.js",
     exec_mode: "fork",
