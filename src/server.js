@@ -20,11 +20,11 @@ app.use(cookieParser());
 const ROUTE_PREFIX = process.env.ROUTE_PREFIX || '/auth';
 
 // Serve Static Assets under prefix
-app.use(ROUTE_PREFIX, express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Load Routes under prefix
 const routes = require('./routes');
-app.use(ROUTE_PREFIX, routes);
+app.use(routes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
