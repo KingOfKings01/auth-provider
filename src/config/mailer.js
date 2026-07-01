@@ -15,14 +15,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Test the SMTP Connection on server boot
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Mailer Service SMTP Verification Failed:', error.message);
-    } else {
-        console.log('📧 Mailer Service Ready: Authorized sending configured successfully.');
-    }
-});
+
 
 /**
  * Sends OTP verification to target email

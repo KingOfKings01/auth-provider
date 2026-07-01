@@ -5,10 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const { connectDB } = require('./config/database');
 
-// Connect to MongoDB
-connectDB().catch(err => {
-    console.error('❌ Database connection failed on startup:', err.message);
-});
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +20,20 @@ const ROUTE_PREFIX = process.env.ROUTE_PREFIX || '/auth';
 
 // Serve Static Assets under prefix
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Database connection middleware (lazy connection)
+app.use(async (req, res, next) => {
+    if (req.path === '/ping') {
+        return next();
+    }
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('❌ Database connection error in middleware:', err.message);
+        res.status(500).json({ error: 'Database connection failed' });
+    }
+});
 
 // Load Routes under prefix
 const routes = require('./routes');
