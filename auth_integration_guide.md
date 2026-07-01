@@ -9,7 +9,7 @@ This guide outlines the step-by-step procedure to integrate custom desktop or cl
 Before writing code, you must register your application in the administration dashboard.
 
 1. Navigate to the Dashboard URL: 
-   👉 **[http://13.234.77.157:3005/auth/dashboard](http://13.234.77.157:3005/auth/dashboard)**
+   👉 **[http://13.234.77.157/auth/dashboard](http://13.234.77.157/auth/dashboard)** (Port 3005 is no longer required due to Nginx/Negx routing)
 2. Click **Create New App** and give it a descriptive name.
 3. Once created, copy your secure credentials from the grid:
    - **`App ID`**: Public UUID identifying your application.
@@ -18,18 +18,37 @@ Before writing code, you must register your application in the administration da
 
 ---
 
-## 🔐 The Two-Step OTP Authentication Flow
+## 🔐 The Two-Step OTP Authentication & Integration Flow
 
-To ensure session exclusivity (preventing unauthorized individuals from using a single authorized license), the system operates on a **Dual-Path Verification** methodology:
+To ensure session exclusivity (preventing unauthorized individuals from using a single authorized license), the integration process and user flow must adhere to the following steps:
 
-1. **Trigger:** When your application requests authorization, the server generates a unique, secure 6-digit OTP.
-2. **Path A (To User):** The server automatically emails this OTP to the user's inbox.
-3. **Path B (To Application):** The server embeds the exact same OTP string in the JSON payload response to your code.
-4. **Local Match Check:**
-   - Your application intercepts the OTP from the API response and stores it temporarily in memory.
-   - Your application halts processing and displays an OTP Entry Dialogue to the user.
-   - The user checks their email inbox, retrieves the code, and enters it.
-   - Your application performs a local, character-perfect comparison: `if (entered_code === api_response_otp) { AUTHORIZE() }`.
+### 🖥️ 1. User Interface & Login Phase
+- **Login Screen:** Create a login page that requests the user's **Email address**. 
+- **Application Configuration:** Keep the **App ID** and **API Key** credentials configured behind the scenes (e.g., in environment variables or configuration files).
+- **Submission:** When the user clicks the login button, call the authorization API.
+
+### 📧 2. Verification Code Delivery & Hidden OTP Retrieval
+- **API Call:** Send a POST request to `/auth/api/authorize`.
+- **Response Payload:** The API will return an JSON response indicating authorization status and including the 6-digit session `otp`.
+- **Keep Behind the Scenes (Crucial):** **DO NOT** display this returned `otp` value to the user or print it in public logs. Store it privately in your application's memory/state variables ("behind the scenes").
+- **Email Delivery:** Meanwhile, the authentication server will email the exact same OTP directly to the user's email inbox.
+
+### 🔑 3. OTP Match Check & Application Access
+- **OTP Dialog:** Immediately display an input box asking the user to enter the verification code received in their email.
+- **Comparison Logic:** Compare the code entered by the user with the stored `otp` value:
+  ```javascript
+  if (enteredCode === storedOtpFromApiResponse) {
+      // Let the user continue to the application
+      grantAccess();
+  } else {
+      // Reject and request the user to try again
+      showError("Invalid verification code.");
+  }
+  ```
+
+### 🚪 4. Automatic Session Logout
+- **Process Termination:** To prevent session reuse and track usage metrics correctly, your application **MUST** automatically call the logout tracking endpoint (`/auth/api/track-logout`) every time the application is closed.
+- **Implementation triggers:** Listen to application exit events (e.g., window closing, process terminating, page unload, or electron's `will-quit` / `before-unload` events) to trigger this request synchronously before exit.
 
 ---
 
@@ -41,7 +60,7 @@ Applications perform user authentication by executing standard JSON POST request
 Verifies that an email is active, authorized to use your app, dispatches an automated Email verification code, and returns the session OTP.
 
 - **Method:** `POST`
-- **URL:** `http://13.234.77.157:3005/auth/api/authorize`
+- **URL:** `http://13.234.77.157/auth/api/authorize`
 - **Headers:** `Content-Type: application/json`
 
 #### 📤 Request Body
@@ -82,7 +101,7 @@ Returns true, registers a `LOGIN_INIT` event, triggers Nodemailer to send verifi
 Updates the activity logs inside the main dashboard to track exact user durations.
 
 - **Method:** `POST`
-- **URL:** `http://13.234.77.157:3005/auth/api/track-logout`
+- **URL:** `http://13.234.77.157/auth/api/track-logout`
 - **Headers:** `Content-Type: application/json`
 
 #### 📤 Request Body

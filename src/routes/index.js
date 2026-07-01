@@ -14,12 +14,12 @@ router.get('/', (req, res) => res.redirect('dashboard'));
 router.get('/ping', (req, res) => res.json({ status: "online", message: "Auth Provider Service is Live" }));
 
 router.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../public/views/login.html'));
+    res.sendFile(path.join(__dirname, '../views/login.html'));
 });
 
 // Protected Pages
 router.get('/dashboard', protect, (req, res) => {
-    res.sendFile(path.join(__dirname, '../../public/views/dashboard.html'));
+    res.sendFile(path.join(__dirname, '../views/dashboard.html'));
 });
 
 // ==========================================

@@ -9,17 +9,23 @@ if (!MONGO_URI) {
     process.exit(1);
 }
 
+let cachedConnection = null;
+
 const connectDB = async () => {
+    if (cachedConnection) {
+        return cachedConnection;
+    }
     try {
         // Mongoose buffers commands, so models can be required anywhere
-        await mongoose.connect(MONGO_URI);
+        cachedConnection = await mongoose.connect(MONGO_URI);
         console.log('🚀 Connected to MongoDB Atlas successfully');
         
         // Run the default seeder
         await seedAdmin();
+        return cachedConnection;
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
-        process.exit(1);
+        throw error;
     }
 };
 
