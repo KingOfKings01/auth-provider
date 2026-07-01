@@ -16,7 +16,9 @@ const connectDB = async () => {
     }
     try {
         // Mongoose buffers commands, so models can be required anywhere
-        cachedConnection = await mongoose.connect(MONGO_URI);
+        cachedConnection = await mongoose.connect(MONGO_URI, {
+            serverSelectionTimeoutMS: 5000
+        });
         console.log('🚀 Connected to MongoDB Atlas successfully');
         
         // Run the default seeder

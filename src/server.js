@@ -6,7 +6,9 @@ const path = require('path');
 const { connectDB } = require('./config/database');
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch(err => {
+    console.error('❌ Database connection failed on startup:', err.message);
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
