@@ -4,14 +4,13 @@ require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI;
 
-if (!MONGO_URI) {
-    console.error('❌ Error: MONGO_URI is not defined in .env');
-    process.exit(1);
-}
-
 let cachedConnection = null;
 
 const connectDB = async () => {
+    if (!MONGO_URI) {
+        console.error('❌ Error: MONGO_URI is not defined');
+        throw new Error('MONGO_URI is not defined in environment variables');
+    }
     if (cachedConnection) {
         return cachedConnection;
     }
