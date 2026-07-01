@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 const ApplicationSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -22,8 +22,8 @@ const MongooseApplication = mongoose.model('AuthProviderApplication', Applicatio
 
 const Application = {
     create: async (name, description) => {
-        const appId = uuidv4();
-        const apiKey = require('crypto').randomBytes(24).toString('hex');
+        const appId = crypto.randomUUID();
+        const apiKey = crypto.randomBytes(24).toString('hex');
         
         const doc = await MongooseApplication.create({
             name,
