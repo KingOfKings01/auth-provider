@@ -1,10 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/login", "destination": "/api" },
-    { "source": "/dashboard", "destination": "/api" },
-    { "source": "/ping", "destination": "/api" },
-    { "source": "/", "destination": "/api" }
+    {
+      "source": "/((?!css/).*)",
+      "destination": "/api/index.js"
+    }
   ]
 }
